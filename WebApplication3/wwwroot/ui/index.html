@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Вимоги до кандидата</title>
+  <link rel="stylesheet" href="/ui/styles.css">
+</head>
+<body>
+  <div class="bg"></div>
+  <main class="card">
+    <div class="clip"></div>
+    <h1>Вимоги до кандидата</h1>
+    <p class="lead">Опишіть вакансію та відзначте, які пункти є обов'язковими — це допоможе точніше відбирати відгуки.</p>
+
+    <label class="label">Назва вакансії</label>
+    <input class="title" placeholder="Junior .NET Developer" />
+
+    <h3 class="section">Чек-лист вимог <span class="small">позначте обов'язкові</span></h3>
+
+    <ul class="list">
+      <li>
+        <label class="checkbox">
+          <input type="checkbox" checked />
+          <span>Досвід з ASP.NET Core від 1 року</span>
+        </label>
+        <div class="delete">×</div>
+      </li>
+      <li>
+        <label class="checkbox">
+          <input type="checkbox" />
+          <span>Знання англійської на рівні Intermediate</span>
+        </label>
+        <div class="delete">×</div>
+      </li>
+    </ul>
+
+    <button class="add">+ Додати вимогу</button>
+
+    <div class="actions">
+      <button class="save">Зберегти вимоги</button>
+      <div class="hint">Список можна редагувати пізніше</div>
+    </div>
+
+    <section class="paste">
+      <h3 class="section" style="margin-top:22px">Швидке вставлення</h3>
+      <label class="label">Вставте текст сюди</label>
+      <textarea id="bigtext" class="bigtext" placeholder="Вставте великий текст (резюме, опис вакансії) або прикріпіть файл"></textarea>
+      <div style="display:flex;gap:12px;margin-top:12px;align-items:center">
+        <input id="file" type="file" />
+        <button id="uploadBtn" class="save">Завантажити в S3</button>
+        <div id="result" style="color:var(--muted)"></div>
+      </div>
+    </section>
+  </main>
+  <script>
+    (function(){
+      const btn = document.getElementById('uploadBtn');
+      const file = document.getElementById('file');
+      const big = document.getElementById('bigtext');
+      const result = document.getElementById('result');
+
+      btn.addEventListener('click', async function(e){
+        e.preventDefault();
+        result.textContent = '';
+
+        const fd = new FormData();
+        if (file.files && file.files.length > 0) {
+          fd.append('file', file.files[0]);
+        } else if (big.value && big.value.trim().length>0) {
+          fd.append('text', big.value);
+        } else {
+          result.textContent = 'Додайте файл або вставте текст';
+          return;
+        }
+
+        result.textContent = 'Завантаження...';
+        try{
+          const r = await fetch('/Home/Homecoming', { method: 'POST', body: fd });
+          const data = await r.json();
+          if (r.ok) {
+            result.textContent = 'OK — ключ: ' + (data.key || data.message);
+          } else {
+            result.textContent = 'Помилка: ' + (data.error || JSON.stringify(data));
+          }
+        }catch(err){
+          result.textContent = 'Помилка: ' + err.message;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
